@@ -1,0 +1,12 @@
+.APNG
+.AVIF
+.GIF
+.JPEG
+.JPG
+.PNG
+.SVG
+.WebP
+.BMP
+.ICO
+.TIFF
+.psd
