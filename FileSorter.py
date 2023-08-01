@@ -40,11 +40,11 @@ def get_file_extention(name):
     Returns:
         string: The extension/type of the file
     """
-    fileName = os.path.splitext(name)[1]
-    if fileName == '':
+    filename = os.path.splitext(name)[1]
+    if filename == '':
         return "folder"
     else:
-        return fileName
+        return filename
 
 
 # In[33]:
@@ -115,26 +115,60 @@ def directory_check(directory):
     # Add any additional actions you want to perform here
 
 
-# In[47]:
+# In[ ]:
 
 
-def print_colored_text(color, text):
-    color_codes = {
-        'black': '30',
-        'red': '31',
-        'green': '32',
-        'yellow': '33',
-        'blue': '34',
-        'magenta': '35',
-        'cyan': '36',
-        'white': '37',
-    }
+def create_backup(directory):
+    """
+    This function creates a backup for the given directory.
+    Note that it does't backup the folders, only the files in the directory.
+    
+    example: 
+        create_backup("C:\your\path\here\") 
+        
+    Parameters:
+        directory: (string): the directory path
+    """
+    logging.debug(f"creating backup")
+    print("\n---------- CREATING BACKUP ----------n")
+    files = os.listdir(directory)
+    try:
+        # create a backup folder
+        os.mkdir(directory + "\\FileSorter_backup")
+        print("Created FileSorter_backup folder")
+        logging.debug(f"Created 'FileSorter_backup' folder at: {os.path.join(directory, 'FileSorter_backup')}")
+        backup_folder = "FileSorter_backup"
+    except OSError as e:
+        print(f"Error creating the 'FileSorter_backup' folder: {e}")
+        logging.error(f"Error creating the 'FileSorter_backup' folder:: {e}")
+        exit(1)
+        
+    # Move the files the backup folder
+    for file in files:
+        file_extension = get_file_extention(file)
+        # if the file is not a folder
+        if file_extension != "folder":
+            # select the file   
+            file_to_move = os.path.join(directory, file)
 
-    if color.lower() in color_codes:
-        color_code = color_codes[color.lower()]
-        return(f"\033[{color_code}m{text}\033[0m")
-    else:
-        return(text)
+            # select the directory
+            destination = os.path.join(directory, backup_folder)
+
+            try:
+                # move the file to the specified directory
+                shutil.copy(file_to_move, destination)
+                print(f"Moving {file_to_move} to {destination}")
+                logging.debug(f"Moving {file_to_move} to {destination}")
+
+            except shutil.SameFileError:
+                # If source and destination are same
+                print("Source and destination represents the same file.")
+                logging.warning("Source and destination represents the same file.")
+
+            except shutil.Error as e:
+                print(f"Error moving the file: {e}")
+                logging.error(f"Error moving the file: {e}")
+                exit(1)
 
 
 # In[48]:
@@ -149,12 +183,22 @@ def main():
     args = parser.parse_args()
 
     # Access the directory argument
-    selectedDirectory = args.directory
-    directory_check(selectedDirectory)
+    selected_directory = args.directory
+    directory_check(selected_directory)
     
-    print("---------- Organizing files ----------\n")
+    # Ask for backup
+    backup = input("\nDo you want to create a Backup?\n Y \\ n  :  ")
+    backup = backup.lower()
     
-    files = os.listdir(selectedDirectory)
+    if backup == "y":
+        create_backup(selected_directory)
+        
+    logging.debug(f"backup finished succesfully")
+    print("\n---------- BACKUP FINISHED ----------")
+    
+    print("---------- ORGANIZING FILES ----------\n")
+    
+    files = os.listdir(selected_directory)
 
     # Configure the logging
     logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
@@ -164,17 +208,17 @@ def main():
     if not "images" in convert_list_to_lowercase(files):
         try:
             # create an images folder
-            os.mkdir(selectedDirectory + "\\images")
+            os.mkdir(selected_directory + "\\images")
             print("Created images folder")
-            logging.debug(f"Created 'images' folder at: {os.path.join(selectedDirectory, 'images')}")
+            logging.debug(f"Created 'images' folder at: {os.path.join(selected_directory, 'images')}")
             # save the name of the folder
-            imageFolder = "images"
+            image_folder = "images"
         except OSError as e:
             print(f"Error creating the 'images' folder: {e}")
             logging.error(f"Error creating the 'images' folder:: {e}")
     else: 
         # save the name of the existing folder as it is
-        imageFolder = files[convert_list_to_lowercase(files).index("images")]
+        image_folder = files[convert_list_to_lowercase(files).index("images")]
         logging.debug(f"images folder already exist.")
 
 
@@ -182,51 +226,51 @@ def main():
     if not "videos" in convert_list_to_lowercase(files):
         try:
             # create a videos folder
-            os.mkdir(selectedDirectory + "\\videos")
+            os.mkdir(selected_directory + "\\videos")
             print("Created videos folder")
-            logging.debug(f"Created 'videos' folder at: {os.path.join(selectedDirectory, 'videos')}")
+            logging.debug(f"Created 'videos' folder at: {os.path.join(selected_directory, 'videos')}")
             # save the name of the folder
-            videoFolder = "videos"
+            video_folder = "videos"
         except OSError as e:
             print(f"Error creating the 'videos' folder: {e}")
             logging.error(f"Error creating the 'videos' folder: {e}")
     else:
         # save the name of the existing folder as it is
-        videoFolder = files[convert_list_to_lowercase(files).index("videos")]
+        video_folder = files[convert_list_to_lowercase(files).index("videos")]
         logging.debug(f"videos folder already exist.")
 
     # if there is not a music folder
     if not "music" in convert_list_to_lowercase(files):
         try:
             # create a music folder
-            os.mkdir(selectedDirectory + "\\music")
+            os.mkdir(selected_directory + "\\music")
             print("Created music folder")
-            logging.debug(f"Created 'music' folder at: {os.path.join(selectedDirectory, 'music')}")
+            logging.debug(f"Created 'music' folder at: {os.path.join(selected_directory, 'music')}")
             # save the name of the folder
-            musicFolder = "music"
+            music_folder = "music"
         except OSError as e:
             print(f"Error creating the 'music' folder: {e}")
             logging.error(f"Error creating the 'music' folder: {e}")
     else:
         # save the name of the existing folder as it is
-        musicFolder = files[convert_list_to_lowercase(files).index("music")]
+        music_folder = files[convert_list_to_lowercase(files).index("music")]
         logging.debug(f"music folder already exist.")
 
     # if there is not a documents folder
     if not "documents" in convert_list_to_lowercase(files):
         try:
             # create a documents folder
-            os.mkdir(selectedDirectory + "\\documents")
+            os.mkdir(selected_directory + "\\documents")
             print("Created documents folder")
-            logging.debug(f"Created 'documents' folder at: {os.path.join(selectedDirectory, 'documents')}")
+            logging.debug(f"Created 'documents' folder at: {os.path.join(selected_directory, 'documents')}")
             # save the name of the folder
-            documentsFolder = "documents"
+            documents_folder = "documents"
         except OSError as e:
             print(f"Error creating the 'documents' folder: {e}")
             logging.error(f"Error creating the 'documents' folder: {e}")
     else:
         # save the name of the existing folder as it is
-        documentsFolder = files[convert_list_to_lowercase(files).index("documents")]
+        documents_folder = files[convert_list_to_lowercase(files).index("documents")]
         logging.debug(f"documents folder already exist.")
 
 
@@ -238,63 +282,63 @@ def main():
 
 
     # Read image extensions from the file
-    imageExtention = read_extensions_from_file("image extensions.txt")
-    videoExtention = read_extensions_from_file("video extensions.txt")
-    musicExtention = read_extensions_from_file("music extensions.txt")
+    image_extention = read_extensions_from_file("image extensions.txt")
+    video_extention = read_extensions_from_file("video extensions.txt")
+    music_extention = read_extensions_from_file("music extensions.txt")
 
 
     # Convert the lists to lowrcase
-    imageExtention = convert_list_to_lowercase(imageExtention)
-    videoExtention = convert_list_to_lowercase(videoExtention)
-    musicExtention = convert_list_to_lowercase(musicExtention)
+    image_extention = convert_list_to_lowercase(image_extention)
+    video_extention = convert_list_to_lowercase(video_extention)
+    music_extention = convert_list_to_lowercase(music_extention)
 
 
     # Move the files to folders
     for file in files:
-        fileExtension = get_file_extention(file)
+        file_extension = get_file_extention(file)
 
         # if the file is not a folder
-        if fileExtension != "folder":
+        if file_extension != "folder":
             # select the file   
-            fileToMove = os.path.join(selectedDirectory, file)
+            file_to_move = os.path.join(selected_directory, file)
 
             # if the the file has an image extention
-            if fileExtension in imageExtention:
+            if file_extension in image_extention:
                 images += 1
                 # select the directory
-                destination = os.path.join(selectedDirectory, imageFolder)
+                destination = os.path.join(selected_directory, image_folder)
                 try:
                     # move the file to the specified directory
-                    shutil.move(fileToMove, destination)
-                    print(f"Moving {fileToMove} to {destination}")
-                    logging.debug(f"Moving {fileToMove} to {destination}")
+                    shutil.move(file_to_move, destination)
+                    print(f"Moving {file_to_move} to {destination}")
+                    logging.debug(f"Moving {file_to_move} to {destination}")
                 except shutil.Error as e:
                     print(f"Error moving the file: {e}")
                     logging.error(f"Error moving the file: {e}")
 
             # if the the file has a video extention
-            elif fileExtension in videoExtention:
+            elif file_extension in video_extention:
                 videos += 1
                 # select the directory
                 try:
                     # move the file to the specified directory
-                    shutil.move(fileToMove, destination)
-                    print(f"Moving {fileToMove} to {destination}")
-                    logging.debug(f"Moving {fileToMove} to {destination}")
+                    shutil.move(file_to_move, destination)
+                    print(f"Moving {file_to_move} to {destination}")
+                    logging.debug(f"Moving {file_to_move} to {destination}")
                 except shutil.Error as e:
                     print(f"Error moving the file: {e}")
                     logging.error(f"Error moving the file: {e}")
 
             # if the the file has a music extention
-            elif fileExtension in musicExtention:
+            elif file_extension in music_extention:
                 music += 1
                 # select the directory
-                destination = os.path.join(selectedDirectory, musicFolder)
+                destination = os.path.join(selected_directory, music_folder)
                 try:
                     # move the file to the specified directory
-                    shutil.move(fileToMove, destination)
-                    print(f"Moving {fileToMove} to {destination}")
-                    logging.debug(f"Moving {fileToMove} to {destination}")
+                    shutil.move(file_to_move, destination)
+                    print(f"Moving {file_to_move} to {destination}")
+                    logging.debug(f"Moving {file_to_move} to {destination}")
                 except shutil.Error as e:
                     print(f"Error moving the file: {e}")
                     logging.error(f"Error moving the file: {e}")
@@ -303,12 +347,12 @@ def main():
             else:
                 documents += 1
                 # select the directory
-                destination = os.path.join(selectedDirectory, documentsFolder)
+                destination = os.path.join(selected_directory, documents_folder)
                 try:
                     # move the file to the specified directory
-                    shutil.move(fileToMove, destination)
-                    print(f"Moving {fileToMove} to {destination}")
-                    logging.debug(f"Moving {fileToMove} to {destination}")
+                    shutil.move(file_to_move, destination)
+                    print(f"Moving {file_to_move} to {destination}")
+                    logging.debug(f"Moving {file_to_move} to {destination}")
                 except shutil.Error as e:
                     print(f"Error moving the file: {e}")
                     logging.error(f"Error moving the file: {e}")
@@ -318,12 +362,12 @@ def main():
             pass
 
 
-    numberOfFiles = images + videos + music + documents
+    number_of_files = images + videos + music + documents
 
     print("\n\n----------------------------")
-    print(f"     {str(numberOfFiles)} files organized")
+    print(f"     {str(number_of_files)} files organized")
     print("----------------------------\n")
-    logging.info(f"{str(numberOfFiles)} files organized")
+    logging.info(f"{str(number_of_files)} files organized")
 
     folders = {
         "documents": documents,
@@ -333,12 +377,12 @@ def main():
     }
 
     # Sort the dictionary by its values in descending order
-    sortedFolders = sorted(folders.items(), key=lambda x: x[1], reverse=True)
+    sorted_folders = sorted(folders.items(), key=lambda x: x[1], reverse=True)
 
     print("Summary: ")
-    for folder, count in sortedFolders:
-        print(f"{count} {folder} has moved to " + os.path.join(selectedDirectory, f"{folder}"))
-        logging.info(f"{count} {folder} has moved to " + os.path.join(selectedDirectory, f"{folder}"))
+    for folder, count in sorted_folders:
+        print(f"{count} {folder} has moved to " + os.path.join(selected_directory, f"{folder}"))
+        logging.info(f"{count} {folder} has moved to " + os.path.join(selected_directory, f"{folder}"))
 
     print("\nOrganizing completed successfully! Your files are now organized.")
     logging.info("Organizing completed successfully! Your files are now organized.")
